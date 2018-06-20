@@ -15,6 +15,10 @@
 #' @param east coordenada este del recuadro (opcional)
 #' @keywords sites getSite
 #' @export
+#' @importFrom DBI dbDriver
+#' @importFrom RPostgreSQL dbConnect dbGetQuery
+#' @importFrom jsonlite fromJSON
+#' @importFrom dplyr filter
 #' @examples
 #' drv<-dbDriver("PostgreSQL")
 #' con<-dbConnect(drv, user="sololectura",host='10.10.9.14',dbname='meteorology')
