@@ -124,7 +124,7 @@ getValues<-function(con,seriesCatalog,startDate,endDate) {
     }
   } else if(is.vector(seriesCatalog)) {
     for(i in 1:length(seriesCatalog)) {
-      statement=paste("select \"seriesCode\",\"startDate\",\"endDate\",\"value\",'",seriesCatalog[i],"' \"variableName\" from observaciones_all where \"seriesCode\"='",seriesCatalog[i],"' and \"startDate\">='",startDate,"' and \"startDate\" <='",endDate,"' and \"value\" is not null order by \"startDate\"",sep='')
+      statement=paste("select observaciones_all.\"seriesCode\",\"startDate\",\"endDate\",\"value\",series_all.\"variableName\" \"variableName\" from observaciones_all,series_all where observaciones_all.\"seriesCode\"='",seriesCatalog[i],"' and observaciones_all.\"seriesCode\"=series_all.\"seriesCode\" and \"startDate\">='",startDate,"' and \"startDate\" <='",endDate,"' and \"value\" is not null order by \"startDate\"",sep='')
       #      message(statement)
       data<-rbind(data,dbGetQuery(con,statement))
     }
@@ -147,7 +147,7 @@ getValues<-function(con,seriesCatalog,startDate,endDate) {
 #' de series de cada variable.
 #' @param values data.frame obtenido mediante getValues
 #' @param seriesCatalog data.frame obtenido mediante extractSeriesCatalog (opcional)
-#' @param output Archivo donde se imprima el gráfico (opcional)
+#' @param output Archivo donde se imprima el gráfico (opcional). Por defecto abre un display x11
 #' @param types vector Tipos de gráfico para cada variable ('l': línea, 'p': puntos, 's' escalones), en el orden de aparición (opcional)
 #' @param width Ancho del gráfico (opcional)
 #' @param height Altura del gráfico (opcional)
@@ -164,8 +164,12 @@ getValues<-function(con,seriesCatalog,startDate,endDate) {
 #' values<-getValues(con,seriesCatalog,'2010-01-01','2015-01-01')
 #' plotValues(values,seriesCatalog,output='~/tmp/plotValues.png')
 
-plotValues<-function(values,seriesCatalog=NULL,output=paste(getwd(),'/ts_plot.png',sep=''),types=c('l'),width=800,height=700,invert=c(FALSE),startDate=NULL,endDate=NULL) {
-  png(output,width = width, height = height)
+plotValues<-function(values,seriesCatalog=NULL,output=NULL,types=c('l'),width=800,height=700,invert=c(FALSE),startDate=NULL,endDate=NULL) {
+  if(!is.null(output)) {
+    png(output,width = width, height = height)
+  } else {
+    x11(width=width/72,height=height/72)
+  }
   varnames=unique(values$variableName)
   if(length(varnames)>2) {
     stop('max 2 variables')
@@ -201,7 +205,11 @@ plotValues<-function(values,seriesCatalog=NULL,output=paste(getwd(),'/ts_plot.pn
     s_ids=unique(subset$seriesCode)
     for(j in 1:length(s_ids)) {
       subsubset <- subset[subset$seriesCode == s_ids[j],]
-      lines(subsubset$value~as.Date(subsubset$startDate),type=types[i],pch=16,cex=0.5,xaxt = 'n', yaxt = 'n',xlab=NA,ylab=NA,col=colors[k])
+      if(types[i]=='p') {
+        points(subsubset$value~as.Date(subsubset$startDate),type='p',pch=16,cex=0.5,xaxt = 'n', yaxt = 'n',xlab=NA,ylab=NA,col=colors[k])
+      } else {
+        lines(subsubset$value~as.Date(subsubset$startDate),type=types[i],pch=16,cex=0.5,xaxt = 'n', yaxt = 'n',xlab=NA,ylab=NA,col=colors[k])
+      }
       lty=c(lty,if(types[i]=='l' || types[i]=='s') 1 else NA)
       pch=c(pch,if(types[i]=='p') 20 else NA)
       seriesMetadata=if(!is.null(seriesCatalog)) if(!is.null(filter(seriesCatalog,seriesCode==s_ids[j]))) filter(seriesCatalog,seriesCode==s_ids[j]) else NULL else NULL
@@ -211,9 +219,15 @@ plotValues<-function(values,seriesCatalog=NULL,output=paste(getwd(),'/ts_plot.pn
       k=k+1
     }
   }
-  # message(paste("lty: ",lty,"pch",pch,sep=','))
-  legend('top',legend,col=lcolors,lty=lty,pch=pch)
-  dev.off()
-  message(paste("Se imprimio el plot en el archivo ",output,sep=''))
+  if(FALSE %in% is.na(lty)) {
+    legend('top',legend,col=lcolors,lty=lty,pch=pch,horiz=TRUE)
+  } else {
+    legend('top',legend,col=lcolors,pch=pch,horiz=TRUE)
+  }
+  if(!is.null(output)) {
+    dev.off()
+    message(paste("Se imprimio el plot en el archivo ",output,sep=''))
+  }
   return(0)
 }
+

@@ -4,16 +4,16 @@
 \alias{plotValues}
 \title{plotValues (gdh.db.in package)}
 \usage{
-plotValues(values, seriesCatalog = NULL, output = paste(getwd(),
-  "/ts_plot.png", sep = ""), types = c("l"), width = 800, height = 700,
-  invert = c(FALSE), startDate = NULL, endDate = NULL)
+plotValues(values, seriesCatalog = NULL, output = NULL, types = c("l"),
+  width = 800, height = 700, invert = c(FALSE), startDate = NULL,
+  endDate = NULL)
 }
 \arguments{
 \item{values}{data.frame obtenido mediante getValues}
 
 \item{seriesCatalog}{data.frame obtenido mediante extractSeriesCatalog (opcional)}
 
-\item{output}{Archivo donde se imprima el gráfico (opcional)}
+\item{output}{Archivo donde se imprima el gráfico (opcional). Por defecto abre un display x11}
 
 \item{types}{vector Tipos de gráfico para cada variable ('l': línea, 'p': puntos, 's' escalones), en el orden de aparición (opcional)}
 
